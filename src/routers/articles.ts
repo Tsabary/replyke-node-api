@@ -5,7 +5,7 @@ import IArticle from "../interfaces/IArticle";
 const router = Router();
 
 // Fetch a single article
-router.get("/articles", async (req: ExReq, res: ExRes) => {
+router.get("/replyke-articles", async (req: ExReq, res: ExRes) => {
   try {
     const { article_id } = req.query;
 
@@ -21,7 +21,7 @@ router.get("/articles", async (req: ExReq, res: ExRes) => {
   }
 });
 
-router.post("/articles/like", async (req: ExReq, res: ExRes) => {
+router.post("/replyke-articles/like", async (req: ExReq, res: ExRes) => {
   try {
     const body = req.body;
 
@@ -86,7 +86,7 @@ router.post("/articles/like", async (req: ExReq, res: ExRes) => {
   }
 });
 
-router.post("/articles/unlike", async (req: ExReq, res: ExRes) => {
+router.post("/replyke-articles/unlike", async (req: ExReq, res: ExRes) => {
   try {
     const body = req.body;
 

@@ -7,7 +7,7 @@ import IArticle from "../interfaces/IArticle";
 
 const router = Router();
 
-router.get("/comments", async (req: ExReq, res: ExRes) => {
+router.get("/replyke-comments", async (req: ExReq, res: ExRes) => {
   try {
     const {
       app_key,
@@ -76,7 +76,7 @@ router.get("/comments", async (req: ExReq, res: ExRes) => {
   }
 });
 
-router.post("/comments", async (req: ExReq, res: ExRes) => {
+router.post("/replyke-comments", async (req: ExReq, res: ExRes) => {
   try {
     const body = req.body;
 
@@ -161,7 +161,7 @@ router.post("/comments", async (req: ExReq, res: ExRes) => {
   }
 });
 
-router.delete("/comments", async (req: ExReq, res: ExRes) => {
+router.delete("/replyke-comments", async (req: ExReq, res: ExRes) => {
   try {
     const body = req.body;
     const { comment_id } = body;
@@ -254,7 +254,7 @@ router.delete("/comments", async (req: ExReq, res: ExRes) => {
   }
 });
 
-router.patch("/comments", async (req: ExReq, res: ExRes) => {
+router.patch("/replyke-comments", async (req: ExReq, res: ExRes) => {
   try {
     const body = req.body;
     const { update, comment_id } = body;
@@ -267,7 +267,7 @@ router.patch("/comments", async (req: ExReq, res: ExRes) => {
   }
 });
 
-router.post("/comments/like", async (req: ExReq, res: ExRes) => {
+router.post("/replyke-comments/like", async (req: ExReq, res: ExRes) => {
   try {
     const body = req.body;
 
@@ -310,7 +310,7 @@ router.post("/comments/like", async (req: ExReq, res: ExRes) => {
   }
 });
 
-router.post("/comments/unlike", async (req: ExReq, res: ExRes) => {
+router.post("/replyke-comments/unlike", async (req: ExReq, res: ExRes) => {
   try {
     const body = req.body;
 
