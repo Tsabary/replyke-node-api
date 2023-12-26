@@ -4,71 +4,64 @@ import IArticle from "../interfaces/IArticle";
 
 const router = Router();
 
-// Fetch a single article
-router.get("/replyke-articles", async (req: ExReq, res: ExRes) => {
+// Route to fetch a single article by its ID.
+router.get("/replyke-articles/:article_id", async (req: ExReq, res: ExRes) => {
   try {
-    const { article_id } = req.query;
+    // Extract article_id from the path parameters.
+    const { article_id } = req.params;
 
+    // Search for the article using Mongoose's findOne method.
     const article: IArticle | null = await Article.findOne({
       article_id,
     }).lean();
 
-    if (!article) return res.status(204).send();
+    // If no article is found, return a 404 (Not Found) status.
+    if (!article) return res.status(404).send();
 
+    // If an article is found, return it with a 200 (OK) status.
     return res.status(200).send(article);
   } catch (err: any) {
-    return res.status(500).send({ error: err.message });
+    // In case of any server errors, return a 500 (Internal Server Error) status.
+    return res.status(500).send({ error: "Server error" });
   }
 });
 
+// Route to like an article.
 router.post("/replyke-articles/like", async (req: ExReq, res: ExRes) => {
   try {
-    const body = req.body;
+    const { article_id, user_id } = req.body;
 
-    if (!body) throw new Error("No request body was");
-
-    const { article_id, user_id } = body;
+    // Validate the presence of article_id and user_id.
+    if (!article_id || !user_id) {
+      return res
+        .status(400)
+        .send("Missing article_id or user_id in request body");
+    }
 
     // First we want to fetch the article
     const article: IArticle | null = await Article.findOne({
       article_id,
     }).lean();
 
-    // We create a variable, that will eventually be sent to the client
     let newArticle;
 
-    // As an article document is only created once we have some data as likes or comments,
-    // we need to check if we received anything form our article query or not, and handle both options slightly differently.
     if (article) {
-      // If the likes array in the article document already contains the user's id,
-      // we simply return without doing anything as the user can't like an article twice.
+      // Prevent duplicate likes.
       if (article.likes.includes(user_id)) {
-        return res.status(406).send("User already liked article");
+        return res.status(409).send("User already liked article");
       }
 
-      // Otherwise, we update the article - we increase the like count by 1,
-      // and add the user's id to the "likes" array
-      await Article.findOneAndUpdate(
+      // Update the article with the new like.
+      newArticle = await Article.findOneAndUpdate(
         { article_id },
         {
           $inc: { likes_count: 1 },
           $push: { likes: user_id },
-        }
+        },
+        { new: true }
       );
-
-      // We set the variable which we created before as the new article after the changes we've just made.
-      newArticle = {
-        ...article,
-        likes_count: article.likes_count + 1,
-        likes: [...article.likes, user_id],
-      };
-    }
-
-    // Else, if we couldn't find an article document with the article ID we passed,
-    // then it means that this like is the first piece of information we have a about this article
-    else {
-      // We simply create a new article document with one like,
-      // and the user's id inside the likes array. We set the new article to the variable we created before
+    } else {
+      // Create a new article if it doesn't exist.
       newArticle = new Article({
         article_id,
         likes: [user_id],
@@ -79,62 +72,53 @@ router.post("/replyke-articles/like", async (req: ExReq, res: ExRes) => {
       await newArticle.save();
     }
 
-    // If everything went well, we send the article back
+    // Return the updated or newly created article.
     return res.status(200).send(newArticle);
   } catch (err: any) {
-    return res.status(500).send({ error: err.message });
+    // Handle server errors.
+    return res.status(500).send({ error: "Server error" });
   }
 });
 
+// Route to unlike an article.
 router.post("/replyke-articles/unlike", async (req: ExReq, res: ExRes) => {
   try {
-    const body = req.body;
+    const { article_id, user_id } = req.body;
 
-    if (!body) throw new Error("No request body was found");
+    // Validate the presence of article_id and user_id.
+    if (!article_id || !user_id) {
+      return res
+        .status(400)
+        .send("Missing article_id or user_id in request body");
+    }
 
-    const { article_id, user_id } = body;
-
-    // We first need to find the article to make sure we've received a valid article id
+    // Fetch the article to check if the user has already liked it.
     const article: IArticle | null = await Article.findOne({
       article_id,
     }).lean();
 
-    // Not like the previous route, here we can't have a scenario in which an article document doesn't exist yet.
-    // Un-liking an article implies the article has been liked before, which means it should already have a document in our database.
-    // If we can't find the article, then we have some issue happening and we return a 404.
-    // This shouldn't ever happen, but we do the check for extra safety.
-    if (!article) {
-      return res.status(404).send("Article not found");
+    // If the article does not exist or the user hasn't liked it.
+    if (!article || !article.likes.includes(user_id)) {
+      return res
+        .status(409)
+        .send("Can't unlike, as user didn't like article or article not found");
     }
 
-    // If the article's "likes" array doesn't include the user's id,
-    // we simply return without doing anything as the user can't
-    // unlike an article they don't currently like.
-    if (!article.likes.includes(user_id)) {
-      return res.status(406).send("Can't unlike, as user didn't like article");
-    }
-
-    // We update the article - we decrease the like count by 1,
-    // and remove the user's id from the "likes" array.
-    await Article.findOneAndUpdate(
+    // Update the article, reducing the like count and removing the user's ID from likes.
+    const updatedArticle = await Article.findOneAndUpdate(
       { article_id },
       {
         $inc: { likes_count: -1 },
         $pull: { likes: user_id },
-      }
+      },
+      { new: true }
     );
 
-    // We create a simple new article object with the updated data
-    const newArticle = {
-      ...article,
-      likes_count: article.likes_count - 1,
-      likes: article.likes.filter((l) => l !== user_id),
-    };
-
-    // If everything went well, we send the article back
-    return res.status(200).send(newArticle);
+    // Return the updated article.
+    return res.status(200).send(updatedArticle);
   } catch (err: any) {
-    return res.status(500).send({ error: err.message });
+    // Handle server errors.
+    return res.status(500).send({ error: "Server error" });
   }
 });
 
