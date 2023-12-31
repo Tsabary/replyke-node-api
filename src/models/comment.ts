@@ -23,10 +23,12 @@ export const commentSchema = new mongoose.Schema({
   },
   likes_count: {
     type: Number,
+    default: 0,
     required: true,
   },
   replies_count: {
     type: Number,
+    default: 0,
     required: true,
   },
   created_at: {
