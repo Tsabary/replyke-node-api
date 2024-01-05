@@ -37,10 +37,10 @@ router.get("/replyke-comments", async (req: ExReq, res: ExRes) => {
       sort = { likes_count: -1, created_at: -1 };
     }
     if (sort_by === "newest") {
-      sort = { created_at: -1 };
+      sort = { created_at: 1 };
     }
     if (sort_by === "oldest") {
-      sort = { created_at: 1 };
+      sort = { created_at: -1 };
     }
 
     // Calculate the number of results to skip for pagination.
